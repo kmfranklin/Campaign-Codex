@@ -27,4 +27,11 @@ class Campaign extends Model
   {
     return $this->members()->wherePivot('role', 'dm');
   }
+
+  protected $fillable = [
+    'name',
+    'description',
+    'slug',
+    'owner_id',
+  ];
 }
