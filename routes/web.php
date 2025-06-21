@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Public\ItemController as PublicItemController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -33,6 +34,12 @@ Route::middleware(['auth'])->group(function () {
   Route::post('/campaigns/lookup', [CampaignController::class, 'lookup'])->name('campaigns.join.lookup');
   Route::get('/campaigns/join/confirm', [CampaignController::class, 'confirm'])->name('campaigns.join.confirm');
   Route::post('/campaigns/join/confirm', [CampaignController::class, 'join'])->name('campaigns.join');
+});
+
+// Public Item Reference
+Route::prefix('items')->name('items.')->group(function () {
+  Route::get('/', [PublicItemController::class, 'index'])->name('index');
+  Route::get('{key}', [PublicItemController::class, 'show'])->name('show');
 });
 
 // Auth scaffolding (login, register, etc.)
