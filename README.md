@@ -1,61 +1,169 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Campaign Codex
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Campaign Codex** is a reference and content management application for tabletop RPGs. It's designed to provide players and Dungeon Masters with a clean, searchable, and extensible interface for browsing rules, spells, creatures, items, and more — sourced from open-content systems like the 5e SRD and Level Up: Advanced 5e (A5E).
 
-## About Laravel
+While the current phase focuses on building the backend and importing normalized data from the 5.1 SRD (via Open5e), future phases will include:
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+-   A public-facing frontend for browsing all rules and entities
+-   User accounts for creating and managing custom content
+-   Tools for building characters, loot tables, and encounters
+-   System-agnostic content tagging and filtering
+-   Cross-referencing between rules (e.g., "Spell X uses ability Y")
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Data Import Workflow
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+The SRD data is imported using a custom Artisan-based pipeline:
 
-## Learning Laravel
+1.  **Monolithic JSON source file** placed in `/storage/json/`
+2.  **Split commands** convert that file into individual record JSONs:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+```
+  bash
+  php artisan open5e:split-<model> # e.g., open5e:split-spells
+```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+3.  **Seeders** read from `/storage/data/srd-2014/` and populate the relational database.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+All migrations, models, seeders, and split commands are committed and reusable.
 
-## Laravel Sponsors
+## Cleanup
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Split JSON files are not versioned to keep the repository lean. You can regenerate them at any time using the split commands. To clean up:
 
-### Premium Partners
+        Remove-Item -Path "storage\data\srd-2014" -Recurse -Force
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## Getting Started
 
-## Contributing
+Clone and set up Laravel as usual:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```
+    composer install
+    cp .env.example .env
+    php artisan key:generate
+    php artisan migrate --seed
+```
 
-## Code of Conduct
+## Development Roadmap
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Phase 0: Project Scaffolding (Complete)
 
-## Security Vulnerabilities
+-   Laravel 11 installed
+-   Installed Laravel Breeze with Blade templates
+-   Jetstream (Inertia + Vue 3) setup
+-   TailwindCSS via Vite
+-   PostgreSQL configured
+-   Built user dashboard at `/dashboard`
+-   .gitignore and README initialized
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Phase 1: Campaign Management Core (Complete)
+
+-   Global user role support (`admin`, `user`)
+-   Built `Campaign` model and migration (with `owner_id`, `slug`, etc.)
+-   Created `campaign_user` pivot table with role-based access (`dm`, `player`)
+-   Implemented campaign creation form (creator auto-joins as DM)
+-   Displays all joined campaigns on dashboard with role and DM shown
+-   Created slug-based campaign join flow:
+    -   Lookup via slug
+    -   Session-based confirmation page
+    -   Final join submission
+-   Prevent duplicate campaign joins
+-   Shows campaign slug to DMs on dashboard
+-   Added Blade views for create, join, and confirm join steps
+
+### Phase 2: Data Import Infrastructure (Complete)
+
+-   Create `documents` table to track content sources
+-   Designed normalized schema for all SRD data types (spells, items, creatures, etc.)
+-   Created custom `open5e:split-<model>` Artisan commands to split monolithic JSON
+-   Created matching seeders to populate database
+-   Verified that all 5.1 SRD data was imported successfully and mapped to the correct models
+-   Removed split JSON files from storage to reduce repo size
+-   Updated README to document import process and cleanup steps
+
+### Phase 3: Public Reference Frontend
+
+-   Route structure for public views (`/spells`, `/items`, `/classes/{slug}`, etc.)
+-   Blade/Inertia pages for browsing each model with filters and search
+-   System-specific filtering (`SRD` vs `A5E`)
+-   Responsive design for mobile usability
+-   Pagination and SEO-friendly URLs
+
+### Phase 4: Custom Content System
+
+-   Registered users can create/edit homebrew spells, items, etc.
+-   Custom content tied to individual accounts
+-   "Save as" feature for duplicating and editing official SRD entries
+-   Campaign-specific content tagging or grouping
+
+### Phase 5: Campaign Logs and Notes System
+
+-   DM and players can contribute to a shared campaign log (session recaps, adventure summaries, etc.)
+-   DMs can create private campaign notes (world lore, secrets, planning, etc.)
+-   Players can add personal notes visible only to themselves
+-   All notes are tied to specific campaigns and scoped by role
+-   Markdown support, tag filters, and optional visibility toggles
+
+### Phase 6: Tools and Utilities
+
+-   Loot table builder (randomized, filterable)
+-   Encounter generator based on CR, biome, party level, etc.
+-   Character builder (stretch goal)
+-   PDF/JSON export tools
+-   Dice roller, initiative tracker, and other play support tools
+
+### Phase 7: A5E Integration
+
+-   Repeat import process for Level Up: Advanced 5e JSON data
+-   Adjust schema as needed to handle A5E-specific fields
+-   Add filtering, toggles, or system tabs to view A5E vs SRD content
+
+## Stretch Goals and Generative Tools
+
+### NPC Generator
+
+-   Randomized or semi-randomized generation of NPCs with:
+    -   Name, race/species, role (merchant, blacksmith, etc.)
+    -   Personality traits, bonds, flaws (from SRD or custom pools)
+    -   Motivations, secrets, voice, and/or quirks
+    -   Option to save to campaign notes or public NPC list
+
+### Tavern / Town Generator
+
+-   Generate settlements with:
+    -   Names, size, population, government
+    -   Map-style layout or listing of establishments (taverns, blacksmiths, etc.)
+    -   Key NPCs auto-linked
+    -   Local rumors or plot hooks
+
+### Worldbuilding Wiki
+
+-   In-app wiki-style tool for world creation
+    -   Categories: regions, deities, factions, languages, historical events
+    -   Link entries to campaigns, notes, or items
+    -   Markdown editing + tagging
+    -   Timeline view or map integration (eventual)
+
+### Region + Dungeon Map Generator (Advanced)
+
+-   Visual map generators or tile-placement tools
+-   Random dungeon layout generation with export options
+-   Link rooms to content (monsters, traps, loot, etc.)
+
+### Plot Hook + Encounter Generator
+
+-   "Roll-a-hook" tool to generate quest starters or complications
+-   Themed by biome, faction, level range
+-   Include flavor text, objective, possible NPC/creature involvement
+
+### Name Generators
+
+-   Fantasy name banks by culture, race/species, or region
+-   Options for:
+    -   People (first + last)
+    -   Locations
+    -   Magic items
+    -   Taverns, inns, shops
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Campaign Codex uses open-source content sourced from [Open5e](https://open5e.com/) and is compliant with the terms of the [Open Gaming License (OGL)](https://open5e.com/legal). Custom code is [MIT-licensed](https://opensource.org/licenses/MIT).
