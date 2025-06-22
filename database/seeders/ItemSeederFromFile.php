@@ -79,7 +79,7 @@ class ItemSeederFromFile extends Seeder
           'document_id' => $document->id,
           'key' => $json['pk'],
           'name' => $fields['name'] ?? 'Unnamed',
-          'description' => $fields['desc'] ?? null,
+          'description' => isset($fields['desc']) ? stripcslashes($fields['desc']) : null,
           'cost' => is_numeric($fields['cost'] ?? null) ? (float)$fields['cost'] : null,
           'weight' => is_numeric($fields['weight'] ?? null) ? (float)$fields['weight'] : null,
           'requires_attunement' => (bool)($fields['requires_attunement'] ?? false),

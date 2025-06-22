@@ -6,18 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gray-100 text-gray-900">
+<body class="flex flex-col min-h-screen bg-gray-100 text-gray-900">
     <header class="bg-white shadow p-4">
         <div class="container mx-auto flex justify-between items-center">
             <a href="{{ url('/') }}" class="text-xl font-bold">Campaign Codex</a>
             <nav>
                 <a href="{{ route('items.index') }}" class="text-sm text-gray-700 hover:underline">Items</a>
-                <!-- You can add more public nav links here -->
             </nav>
         </div>
     </header>
 
-    <main class="container mx-auto my-8">
+    <main class="flex-grow container mx-auto my-8">
         @yield('content')
     </main>
 
